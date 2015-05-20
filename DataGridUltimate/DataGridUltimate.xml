@@ -1,0 +1,853 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<widget id="DataGridUltimate.widget.DataGridUltimate" needsEntityContext="true" xmlns="http://www.mendix.com/widget/1.0/">
+    <name>Data Grid Ultimate</name>
+    <description/>
+    <properties>
+	
+	<!-- Data Source BEGIN -->
+		<property key="entity" required="true" type="entity">
+			<caption>Entity</caption>
+			<category>Data Source</category>
+			<description>Main entity of the data grid.</description>
+		</property>
+		
+		<property key="dataSources" required="false" type="object" isList="true">
+			<caption>Data sources</caption>
+			<category>Data Source</category>
+			<description>Dynamic data sources</description>
+			<properties>
+				
+				<property key="dataSrc" required="true" type="enumeration" defaultValue="xpath">
+					<caption>Type</caption>
+					<category>Data</category>
+					<description/>
+					<enumerationValues>
+						<enumerationValue key="xpath">Database</enumerationValue>
+						<enumerationValue key="assoc">Association</enumerationValue>
+						<enumerationValue key="mf">Microflow</enumerationValue>
+					</enumerationValues>
+				</property>
+				<property key="constraint" required="false" type="entityConstraint" entityProperty="../entity">
+					<caption>Database (XPath)</caption>
+					<category>Data</category>
+					<description>Database only</description>
+				</property>
+				<property key="assoc" required="false" type="entity" isPath="yes" pathType="referenceSet">
+					<caption>Association</caption>
+					<category>Data</category>
+					<description>Association only (should be a ref set from context to Entity)</description>
+				</property>
+				<property key="mf" type="microflow" required="false">
+					<caption>Microflow</caption>
+					<category>Data</category>
+					<description>Microflow only (Output should be list of Entity)</description>
+					<returnType type="Object" isList="true" entityProperty="../entity"/>
+				</property>
+				
+				<property key="dataSrcVisType" required="true" type="enumeration" defaultValue="all">
+					<caption>Visibility rule</caption>
+					<category>Conditions</category>
+					<description>Determines if user role and attribute value are required</description>
+					<enumerationValues>
+						<enumerationValue key="all">User role AND attr value</enumerationValue>
+						<enumerationValue key="either">User role OR attr value</enumerationValue>
+					</enumerationValues>
+				</property>
+				<property key="dataSrcUserRole" required="false" type="string">
+					<caption>User roles allowed</caption>
+					<category>Conditions</category>
+					<description>Comma delimited list of user roles</description>
+				</property>
+				<property key="dataSrcAttr" type="attribute" required="false">
+					<caption>Attribute</caption>
+					<category>Conditions</category>
+					<description/>
+					<attributeTypes>
+						<attributeType name="AutoNumber"/>
+						<attributeType name="Boolean"/>
+						<attributeType name="Currency"/>
+						<attributeType name="DateTime"/>
+						<attributeType name="Enum"/>
+						<attributeType name="Float"/>
+						<attributeType name="Integer"/>
+						<attributeType name="Long"/>
+						<attributeType name="String"/>
+					</attributeTypes>
+				</property>
+				<property key="dataSrcAttrValue" required="false" type="string">
+					<caption>Value</caption>
+					<category>Conditions</category>
+					<description/>
+				</property>
+				
+			</properties>
+			
+		</property>
+	<!-- Data Source END -->
+	
+	<!-- General BEGIN -->
+		<property key="refreshRate" required="true" type="integer" defaultValue="0">
+			<caption>Refresh rate (seconds)</caption>
+			<category>General</category>
+			<description/>
+		</property>
+		
+		<property key="selectionType" required="true" type="enumeration" defaultValue="single">
+			<caption>Selection type</caption>
+			<category>General</category>
+			<description/>
+			<enumerationValues>
+				<enumerationValue key="none">No selection</enumerationValue>
+				<enumerationValue key="single">Single selection</enumerationValue>
+				<enumerationValue key="singleMaintain">Single selection and maintain</enumerationValue>
+				<enumerationValue key="multi">Multi-selection</enumerationValue>
+				<enumerationValue key="simpleMulti">Simple multi-selection</enumerationValue>
+			</enumerationValues>
+		</property>
+		
+		<property key="selectFirst" required="true" type="boolean" defaultValue="false">
+			<caption>Select first</caption>
+			<category>General</category>
+			<description/>
+		</property>
+		
+		<property key="loadingMsg" required="false" type="string">
+			<caption>Loading message</caption>
+			<category>General</category>
+			<description/>
+		</property>
+		
+		<property key="loadingImg" required="false" type="image">
+			<caption>Loading GIF</caption>
+			<category>General</category>
+			<description/>
+		</property>
+		
+
+	<!-- General END -->
+	
+	<!-- Paging BEGIN -->
+		<property key="defaultRows" required="true" type="integer" defaultValue="20">
+			<caption>Number of rows</caption>
+			<category>Paging</category>
+			<description>Default value. If using paging options, make sure this value is an option.</description>
+		</property>
+
+		<property key="topPaging" required="true" type="enumeration" defaultValue="yes">
+			<caption>Normal paging</caption>
+			<category>Paging</category>
+			<description/>
+			<enumerationValues>
+				<enumerationValue key="yes">Yes</enumerationValue>
+				<enumerationValue key="only">Only if necessary</enumerationValue>
+				<enumerationValue key="no">No</enumerationValue>
+			</enumerationValues>
+		</property>
+		
+		<property key="bottomPaging" required="true" type="enumeration" defaultValue="yes">
+			<caption>Bottom paging</caption>
+			<category>Paging</category>
+			<description>The below options are only for the bottom paging bar</description>
+			<enumerationValues>
+				<enumerationValue key="yes">Yes</enumerationValue>
+				<enumerationValue key="only">Only if necessary</enumerationValue>
+				<enumerationValue key="no">No</enumerationValue>
+			</enumerationValues>
+		</property>
+		
+		<property key="showCount" required="true" type="boolean" defaultValue="true">
+			<caption>Count and total</caption>
+			<category>Paging</category>
+			<description>Example: Showing 1 - 10 of 123</description>
+		</property>
+		
+		<property key="pagingOptions" required="false" type="object" isList="true">
+			<caption>Paging options</caption>
+			<category>Paging</category>
+			<description/>
+			<properties>
+				<property key="pageValue" required="true" type="integer" defaultValue="10">
+					<caption>Page count value</caption>
+					<category>Paging option</category>
+					<description>Number of rows</description>
+				</property>
+				<property key="pageKey" required="true" type="string">
+					<caption>Page count display</caption>
+					<category>Paging option</category>
+					<description>Text shown to user</description>
+				</property>
+			</properties>
+		</property>
+	<!-- Paging END -->
+	
+	<!-- Control Bar BEGIN -->
+		<property key="ctrlBarClickType" required="true" type="enumeration" defaultValue="dblclick">
+			<caption>Default button trigger</caption>
+			<category>Control Bar</category>
+			<description>The control bar cannot be used by microflow datasources</description>
+			<enumerationValues>
+				<enumerationValue key="click">Single click</enumerationValue>
+				<enumerationValue key="dblclick">Double click</enumerationValue>
+			</enumerationValues>
+		</property>
+						
+		<property key="controlBarButtons" required="false" type="object" isList="true">
+			<caption>Control Bar buttons</caption>
+			<category>Control Bar</category>
+			<description/>
+			<properties>
+				<property key="cbBtnType" required="true" type="enumeration" defaultValue="mf">
+					<caption>Type</caption>
+					<category>General</category>
+					<description>Type of button</description>
+					<enumerationValues>
+						<enumerationValue key="all">Select all pages</enumerationValue>
+						<enumerationValue key="pg">Select page</enumerationValue>
+						<enumerationValue key="des">Deselect all</enumerationValue>
+						<enumerationValue key="mf">Microflow</enumerationValue>
+						<enumerationValue key="new">New</enumerationValue>
+						<enumerationValue key="edit">Edit</enumerationValue>
+						<enumerationValue key="del">Delete</enumerationValue>
+						<enumerationValue key="excel">Export to Excel</enumerationValue>
+						<enumerationValue key="ff">Export to Flat File</enumerationValue>
+					</enumerationValues>
+				</property>
+				
+				<property key="cbDefault" required="true" type="boolean" defaultValue="false">
+					<caption>Default button</caption>
+					<category>General</category>
+					<description/>
+				</property>
+				
+				<property key="cbBtnCaption" required="false" type="string">
+					<caption>Caption</caption>
+					<category>General</category>
+					<description/>
+				</property>
+				<property key="cbBtnTooltip" required="false" type="string">
+					<caption>Tooltip</caption>
+					<category>General</category>
+					<description/>
+				</property>
+				<property key="cbBtnImage" required="false" type="image">
+					<caption>Image</caption>
+					<category>General</category>
+					<description/>
+				</property>
+				
+				<property key="cbBtnMfSel" required="true" type="enumeration" defaultValue="selection">
+					<caption>Pass data grid object</caption>
+					<category>Microflow</category>
+					<description/>
+					<enumerationValues>
+						<enumerationValue key="nothing">Nothing</enumerationValue>
+						<enumerationValue key="selection">Selection (list)</enumerationValue>
+						<enumerationValue key="all">All pages (multi-select only)</enumerationValue>
+					</enumerationValues>
+				</property>
+				
+				<property key="cbBtnMf" type="microflow" required="false" parameterIsList="true" entityProperty="../entity">
+					<caption>Microflow</caption>
+					<category>Microflow</category>
+					<description/>
+					<returnType type="Void"/>
+				</property>
+				
+				<property key="cbBtnMaintain" required="true" type="boolean" defaultValue="false">
+					<caption>Maintain selection</caption>
+					<category>Microflow</category>
+					<description/>
+				</property>
+				
+				<property key="cbBtnAsk" required="true" type="boolean" defaultValue="false">
+					<caption>Ask confirmation</caption>
+					<category>Microflow</category>
+					<description/>
+				</property>
+				
+				<property key="cbBtnQuestion" required="false" type="string" multiline="true" defaultValue="Are you sure?">
+					<caption>Question</caption>
+					<category>Microflow</category>
+					<description/>
+				</property>
+				
+				<property key="cbBtnProceed" required="false" type="string" defaultValue="Proceed">
+					<caption>Proceed caption</caption>
+					<category>Microflow</category>
+					<description/>
+				</property>
+				
+				<property key="cbBtnCancel" required="false" type="string" defaultValue="Cancel">
+					<caption>Cancel caption</caption>
+					<category>Microflow</category>
+					<description/>
+				</property>
+				
+				<property key="cbBtnProgBarType" required="true" type="enumeration" defaultValue="none">
+					<caption>Show progress bar</caption>
+					<category>Microflow</category>
+					<description/>
+					<enumerationValues>
+						<enumerationValue key="none">None</enumerationValue>
+						<enumerationValue key="noblock">Non-blocking</enumerationValue>
+						<enumerationValue key="block">Blocking</enumerationValue>
+					</enumerationValues>
+				</property>
+				
+				<property key="cbBtnProgMsg" required="false" type="string">
+					<caption>Progress message</caption>
+					<category>Microflow</category>
+					<description/>
+				</property>
+				
+				<property key="cbBtnMfCallType" required="true" type="enumeration" defaultValue="sync">
+					<caption>Microflow call type</caption>
+					<category>Microflow</category>
+					<description/>
+					<enumerationValues>
+						<enumerationValue key="sync">Synchronous</enumerationValue>
+						<enumerationValue key="async">Asynchronous</enumerationValue>
+					</enumerationValues>
+				</property>
+				
+				<property key="cbBtnVisType" required="true" type="enumeration" defaultValue="all">
+					<caption>Visibility rule</caption>
+					<category>Visibility</category>
+					<description>Determines if user role and attribute value are required</description>
+					<enumerationValues>
+						<enumerationValue key="all">User role AND attr value</enumerationValue>
+						<enumerationValue key="either">User role OR attr value</enumerationValue>
+					</enumerationValues>
+				</property>
+				
+				<property key="cbBtnUserRoles" required="false" type="string">
+					<caption>User roles allowed</caption>
+					<category>Visibility</category>
+					<description>Comma delimited string of project roles allowed to see this button</description>
+				</property>
+				
+				<property key="cbBtnVisAttr" type="attribute" required="false" entityProperty="../entity">
+					<caption>Attribute</caption>
+					<category>Visibility</category>
+					<description/>
+					<attributeTypes>
+						<attributeType name="Boolean"/>
+						<attributeType name="Enum"/>
+						<attributeType name="String"/>
+					</attributeTypes>
+				</property>
+				
+				<property key="cbBtnVisValue" type="string" required="false">
+					<caption>Attribute value</caption>
+					<category>Visibility</category>
+					<description>Use 'true' or 'false' for booleans. Use value for enums.</description>
+				</property>
+				
+				<property key="cbExpType" required="true" type="enumeration" defaultValue="all">
+					<caption>Data</caption>
+					<category>Export</category>
+					<description>How much data to export.</description>
+					<enumerationValues>
+						<enumerationValue key="all">All rows</enumerationValue>
+						<enumerationValue key="wysiwyg">Visible rows</enumerationValue>
+					</enumerationValues>
+				</property>
+				
+				<property key="cbExpMaxRows" type="integer" required="true" defaultValue="1000">
+					<caption>Max rows</caption>
+					<category>Export</category>
+					<description>Cap for maximum rows ever allowed to export.</description>
+				</property>
+				
+				<property key="cbExpDtFmt" required="true" type="enumeration" defaultValue="date">
+					<caption>Date format</caption>
+					<category>Export</category>
+					<description>Excel only</description>
+					<enumerationValues>
+						<enumerationValue key="date">Date value</enumerationValue>
+						<enumerationValue key="text">Text</enumerationValue>
+					</enumerationValues>
+				</property>
+				
+				<property key="cbExpDelim" type="string" required="false">
+					<caption>Delimiter</caption>
+					<category>Export</category>
+					<description>Flat file only</description>
+				</property>
+				
+			</properties>
+		</property>
+	<!-- Control Bar END -->
+	
+	<!-- Search Options BEGIN -->
+		<property key="searchBtnType" required="true" type="enumeration" defaultValue="initialClosed">
+			<caption>Show search bar</caption>
+			<category>Search Bar</category>
+			<description>The search bar cannot be used with any data source other than database</description>
+			<enumerationValues>
+				<enumerationValue key="never">Never</enumerationValue>
+				<enumerationValue key="initialOpen">With button (initially open)</enumerationValue>
+				<enumerationValue key="initialClosed">With button (initially closed)</enumerationValue>
+				<enumerationValue key="always">Always</enumerationValue>
+			</enumerationValues>
+		</property>
+		
+		<property key="searchWait" required="true" type="boolean" defaultValue="true">
+			<caption>Wait for search</caption>
+			<category>Search Bar</category>
+			<description/>
+		</property>
+		
+		<property key="searchFields" required="false" type="object" isList="true">
+			<caption>Search fields</caption>
+			<category>Search Bar</category>
+			<description/>
+			<properties>
+				<property key="searchCaption" required="false" type="string">
+					<caption>Caption</caption>
+					<category>General</category>
+					<description/>
+				</property>
+				
+				<property key="searchType" required="true" type="enumeration" defaultValue="normal">
+					<caption>Type</caption>
+					<category>General</category>
+					<description/>
+					<enumerationValues>
+						<enumerationValue key="normal">Normal</enumerationValue>
+						<enumerationValue key="hidden">Hidden</enumerationValue>
+						<enumerationValue key="readonly">Read-only</enumerationValue>
+					</enumerationValues>
+				</property>
+				
+				<property key="searchFieldType" required="true" type="enumeration" defaultValue="dropdown">
+					<caption>Field type</caption>
+					<category>General</category>
+					<description/>
+					<enumerationValues>
+						<enumerationValue key="text">Comparison</enumerationValue>
+						<enumerationValue key="dropdown">Drop-down</enumerationValue>
+						<enumerationValue key="date">Date</enumerationValue>
+					</enumerationValues>
+				</property>
+				
+				<property key="searchCompType" type="enumeration" required="true" defaultValue="eq">
+					<caption>Comparison</caption>
+					<category>General</category>
+					<description>Dropdowns always use the 'equal' operator</description>
+					<enumerationValues>
+						<enumerationValue key="con">Contains (comparison)</enumerationValue>
+						<enumerationValue key="sw">Starts-with (comparison)</enumerationValue>
+						<enumerationValue key="gt">Greater (comparison/date)</enumerationValue>
+						<enumerationValue key="gte">Greater or equal (comparison/date)</enumerationValue>
+						<enumerationValue key="eq">Equal</enumerationValue>
+						<enumerationValue key="neq">Not equal (comparison/date)</enumerationValue>
+						<enumerationValue key="lte">Smaller or equal (comparison/date)</enumerationValue>
+						<enumerationValue key="lt">Smaller (comparison/date)</enumerationValue>
+						<enumerationValue key="range">Range (date)</enumerationValue>
+					</enumerationValues>
+				</property>
+				
+				<property key="searchMulti" required="true" type="boolean" defaultValue="false">
+					<caption>Allow multi-select</caption>
+					<category>General</category>
+					<description>Drop-down only</description>
+				</property>
+				
+				<property key="allowNull" required="true" type="boolean" defaultValue="false">
+					<caption>Allow null</caption>
+					<category>General</category>
+					<description/>
+				</property>
+				
+				<property key="searchDefault" required="false" type="string">
+					<caption>Default value</caption>
+					<category>General</category>
+					<description>Comma delimited for multi-select. Use '(null)' for null (must be enabled).</description>
+				</property>
+				
+				<property key="searchDefaultMf" required="false" type="microflow">
+					<caption>Default value microflow</caption>
+					<category>General</category>
+					<description>Microflow that returns a string value of the default.</description>
+					<returnType type="String"/>
+				</property>
+				
+				<property key="searchEntity" type="entity" required="true">
+					<caption>Search Entity</caption>
+					<category>Data</category>
+					<description>The entity to search on.</description>
+				</property>
+				
+				<property key="searchPath" required="false" type="entityConstraint" entityProperty="../entity">
+					<caption>Path</caption>
+					<category>Data</category>
+					<description>Path to the search entity.</description>
+				</property>
+				
+				<property key="searchAttr" type="attribute" required="true" entityProperty="searchEntity">
+					<caption>Attribute</caption>
+					<category>Data</category>
+					<description/>
+					<attributeTypes>
+						<attributeType name="AutoNumber"/>
+						<attributeType name="Boolean"/>
+						<attributeType name="Currency"/>
+						<attributeType name="DateTime"/>
+						<attributeType name="Enum"/>
+						<attributeType name="Float"/>
+						<attributeType name="Integer"/>
+						<attributeType name="Long"/>
+						<attributeType name="String"/>
+					</attributeTypes>
+				</property>
+				
+				<property key="searchConstraint" required="false" type="entityConstraint" entityProperty="searchEntity">
+					<caption>XPath constraint</caption>
+					<category>Data</category>
+					<description>Drop-down only</description>
+				</property>
+				
+				<property key="searchSort" required="false" type="attribute" entityProperty="searchEntity">
+					<caption>Sort attribute</caption>
+					<category>Sorting</category>
+					<description>Drop-down only</description>
+					<attributeTypes>
+						<attributeType name="AutoNumber"/>
+						<attributeType name="Boolean"/>
+						<attributeType name="Currency"/>
+						<attributeType name="DateTime"/>
+						<attributeType name="Enum"/>
+						<attributeType name="Float"/>
+						<attributeType name="Integer"/>
+						<attributeType name="Long"/>
+						<attributeType name="String"/>
+					</attributeTypes>
+				</property>
+				
+				<property key="searchSortType" required="true" type="enumeration" defaultValue="asc">
+					<caption>Sort direction</caption>
+					<category>Sorting</category>
+					<description>Drop-down only</description>
+					<enumerationValues>
+						<enumerationValue key="asc">Ascending</enumerationValue>
+						<enumerationValue key="desc">Descending</enumerationValue>
+					</enumerationValues>
+				</property>
+				
+				<property key="searchUserRoles" required="false" type="string">
+					<caption>User roles allowed</caption>
+					<category>Visibility</category>
+					<description>Comma delimited string of project roles allowed to see this button</description>
+				</property>
+				
+			</properties>
+		</property>
+	
+		<property key="searchBtnCaption" required="true" type="string" defaultValue="Search">
+			<caption>Toggle search caption</caption>	
+			<category>Search Bar</category>
+			<description>Text of the button which toggles the visibility of the search pane</description>
+		</property>
+		<property key="searchBtnIcon" required="false" type="image">
+			<caption>Toggle search icon</caption>	
+			<category>Search Bar</category>
+			<description>Set icon by specifying an image</description>
+		</property>
+		<property key="searchBtnClass" required="false" type="string">
+			<caption>Toggle search class</caption>	
+			<category>Search Bar</category>
+			<description>Set icon by specifiying a DOM class</description>
+		</property>
+		
+	<!-- Search Options END -->
+	
+	<!-- Columns BEGIN -->
+		<property key="cacheColumns" required="true" type="boolean" defaultValue="true">
+			<caption>Cache preferences</caption>
+			<category>Columns</category>
+			<description>Store column order/visibility/sort order in (modern) web browser</description>
+		</property>
+		
+		<property key="columns" required="false" type="object" isList="true">
+			<caption>Columns</caption>
+			<category>Columns</category>
+			<description>Columns of the data grid.</description>
+			<properties>
+				<property key="colName" required="true" type="string">
+					<caption>Column name</caption>
+					<category>Header</category>
+					<description/>
+				</property>
+				<property key="colUserRoles" required="false" type="string">
+					<caption>User roles allowed</caption>
+					<category>General</category>
+					<description>Comma delimited string of project roles allowed to see this button</description>
+				</property>
+				<property key="colMove" required="true" type="boolean" defaultValue="false">
+					<caption>Moveable</caption>
+					<category>Header</category>
+					<description>Column can be rearranged in data grid</description>
+				</property>
+				<property key="colFrozen" required="true" type="boolean" defaultValue="false">
+					<caption>Frozen</caption>
+					<category>Header</category>
+					<description>If two or more adjacent columns are frozen, additional columns cannot be dropped in between them.</description>
+				</property>
+				<property key="colSort" required="true" type="boolean" defaultValue="true">
+					<caption>Sortable</caption>
+					<category>Header</category>
+					<description>Column can be sorted in data grid</description>
+				</property>
+				<property key="colHideable" required="true" type="boolean" defaultValue="false">
+					<caption>Hide-able</caption>
+					<category>Header</category>
+					<description>Column can be toggled hidden/shown in data grid</description>
+				</property>
+				
+				<property key="colType" required="true" type="enumeration" defaultValue="data">
+					<caption>Column type</caption>
+					<category>General</category>
+					<description/>
+					<enumerationValues>
+						<enumerationValue key="data">Data only</enumerationValue>
+						<enumerationValue key="button">Button (uses data as caption)</enumerationValue>
+					</enumerationValues>
+				</property>
+				<property key="colWidth" required="true" type="string" defaultValue="auto">
+					<caption>Width</caption>
+					<category>General</category>
+					<description>'300px' or 'auto' or '50%'</description>
+				</property>
+				<property key="colEditable" required="true" type="boolean" defaultValue="false">
+					<caption>Editable</caption>
+					<category>General</category>
+					<description/>
+				</property>
+				<property key="colTooltipForm" required="false" type="form">
+					<caption>Tooltip</caption>
+					<category>General</category>
+					<description/>
+				</property>
+				<property key="colShowEnumIcon" required="true" type="boolean" defaultValue="false">
+					<caption>Show enum icon</caption>
+					<category>General</category>
+					<description/>
+				</property>
+				
+				<property key="colDataType" required="true" type="enumeration" defaultValue="field">
+					<caption>Data type</caption>
+					<category>Data</category>
+					<description/>
+					<enumerationValues>
+						<enumerationValue key="static">Static text</enumerationValue>
+						<enumerationValue key="field">XPath</enumerationValue>
+						<enumerationValue key="calculated">Calculated</enumerationValue>
+					</enumerationValues>
+				</property>
+				<property key="colDataText" required="false" type="string">
+					<caption>Static text</caption>
+					<category>Data</category>
+					<description/>
+				</property>
+				
+				<property key="colEntity" required="false" type="entity">
+					<caption>Entity</caption>
+					<category>Data</category>
+					<description/>
+				</property>
+				<property key="colPath" required="false" type="entityConstraint" entityProperty="../entity">
+					<caption>Path</caption>
+					<category>Data</category>
+					<description>Path to the column's data entity</description>
+				</property>
+				
+				<property key="colAttr" type="attribute" required="false" entityProperty="colEntity">
+					<caption>Attribute</caption>
+					<category>Data</category>
+					<description/>
+					<attributeTypes>
+						<attributeType name="AutoNumber"/>
+						<attributeType name="Boolean"/>
+						<attributeType name="Currency"/>
+						<attributeType name="DateTime"/>
+						<attributeType name="Enum"/>
+						<attributeType name="Float"/>
+						<attributeType name="Integer"/>
+						<attributeType name="Long"/>
+						<attributeType name="String"/>
+					</attributeTypes>
+				</property>
+				
+				<property key="colCalcMf" type="microflow" required="false" entityProperty="../entity">
+					<caption>Calculation microflow</caption>
+					<category>Data</category>
+					<description/>
+					<returnType type="String"/>
+				</property>
+
+				<property key="colBtnMf" type="microflow" required="false" entityProperty="../entity">
+					<caption>Microflow </caption>
+					<category>Button - Event</category>
+					<description/>
+					<returnType type="Void"/>
+				</property>
+				<property key="colBtnMaintain" required="true" type="boolean" defaultValue="false">
+					<caption>Maintain selection after microflow</caption>
+					<category>Button - Event</category>
+					<description/>
+				</property>	
+				<property key="colBtnAsk" required="true" type="boolean" defaultValue="false">
+					<caption>Ask confirmation</caption>
+					<category>Button - Event</category>
+					<description/>
+				</property>	
+				<property key="colBtnQuestion" required="false" type="string" multiline="true" defaultValue="Are you sure?">
+					<caption>Question</caption>
+					<category>Button - Event</category>
+					<description/>
+				</property>
+				<property key="colBtnProceed" required="false" type="string" defaultValue="Proceed">
+					<caption>Proceed caption</caption>
+					<category>Button - Event</category>
+					<description/>
+				</property>
+				<property key="colBtnCancel" required="false" type="string" defaultValue="Cancel">
+					<caption>Cancel caption</caption>
+					<category>Button - Event</category>
+					<description/>
+				</property>
+				<property key="colBtnProgBarType" required="true" type="enumeration" defaultValue="none">
+					<caption>Show progress bar</caption>
+					<category>Button - Event</category>
+					<description/>
+					<enumerationValues>
+						<enumerationValue key="none">None</enumerationValue>
+						<enumerationValue key="noblock">Non-blocking</enumerationValue>
+						<enumerationValue key="block">Blocking</enumerationValue>
+					</enumerationValues>
+				</property>
+				<property key="colBtnProgMsg" required="false" type="string">
+					<caption>Progress message</caption>
+					<category>Button - Event</category>
+					<description/>
+				</property>
+				<property key="colBtnMfCallType" required="true" type="enumeration" defaultValue="sync">
+					<caption>Microflow call type</caption>
+					<category>Button - Event</category>
+					<description/>
+					<enumerationValues>
+						<enumerationValue key="sync">Synchronous</enumerationValue>
+						<enumerationValue key="async">Asynchronous</enumerationValue>
+					</enumerationValues>
+				</property>
+					
+				<property key="colBtnTooltip" required="false" type="string">
+					<caption>Button tooltip</caption>
+					<category>Button - Options</category>
+					<description/>
+				</property>
+				<property key="colBtnImg" required="false" type="image">
+					<caption>Image</caption>
+					<category>Button - Options</category>
+					<description/>
+				</property>
+				<property key="colBtnRenderType" required="true" type="enumeration" defaultValue="button">
+					<caption>Render mode</caption>
+					<category>Button - Options</category>
+					<description/>
+					<enumerationValues>
+						<enumerationValue key="link">Link</enumerationValue>
+						<enumerationValue key="button">Button</enumerationValue>
+					</enumerationValues>
+				</property>
+				<property key="colBtnStyle" required="true" type="enumeration" defaultValue="default">
+					<caption>Button style</caption>
+					<category>Button - Options</category>
+					<description/>
+					<enumerationValues>
+						<enumerationValue key="default">Default</enumerationValue>
+						<enumerationValue key="inverse">Inverse</enumerationValue>
+						<enumerationValue key="primary">Primary</enumerationValue>
+						<enumerationValue key="info">Info</enumerationValue>
+						<enumerationValue key="success">Success</enumerationValue>
+						<enumerationValue key="warning">Warning</enumerationValue>
+						<enumerationValue key="danger">Danger</enumerationValue>
+					</enumerationValues>
+				</property>
+			</properties>
+		</property>
+	
+		<property key="sortOrder" required="false" type="object" isList="true">
+			<caption>Sort order</caption>
+			<category>Columns</category>
+			<description/>
+			<properties>
+				<property key="colAttr" type="attribute" required="false" entityProperty="../entity" isPath="optional" pathType="reference">
+					<caption>Attribute</caption>
+					<category>Sort order</category>
+					<description/>
+					<attributeTypes>
+						<attributeType name="AutoNumber"/>
+						<attributeType name="Boolean"/>
+						<attributeType name="Currency"/>
+						<attributeType name="DateTime"/>
+						<attributeType name="Enum"/>
+						<attributeType name="Float"/>
+						<attributeType name="Integer"/>
+						<attributeType name="Long"/>
+						<attributeType name="String"/>
+					</attributeTypes>
+				</property>
+				<property key="sortDirection" required="true" type="enumeration" defaultValue="asc">
+					<caption>Direction</caption>
+					<category>Sort order</category>
+					<description />
+					<enumerationValues>
+						<enumerationValue key="asc">Ascending</enumerationValue>
+						<enumerationValue key="desc">Descending</enumerationValue>
+					</enumerationValues>
+				</property>
+			</properties>
+		</property>
+	<!-- Columns END -->
+	
+	
+	<!-- Rows BEGIN -->
+		<property key="classMappingRules" required="false" type="object" isList="true">
+			<caption>Class mapping rules</caption>
+			<category>Rows</category>
+			<description>Attaches CSS classes to rows based on criteria</description>
+			<properties>
+				<property key="rowAttr" type="attribute" required="true" entityProperty="../entity">
+					<caption>Attribute</caption>
+					<category>Rule</category>
+					<description/>
+					<attributeTypes>
+						<attributeType name="AutoNumber"/>
+						<attributeType name="Boolean"/>
+						<attributeType name="Currency"/>
+						<attributeType name="DateTime"/>
+						<attributeType name="Enum"/>
+						<attributeType name="Float"/>
+						<attributeType name="Integer"/>
+						<attributeType name="Long"/>
+						<attributeType name="String"/>
+					</attributeTypes>
+				</property>
+				<property key="rowValue" required="false" type="string">
+					<caption>Value</caption>
+					<category>Rule</category>
+					<description/>
+				</property>
+				<property key="rowClass" required="false" type="string">
+					<caption>Class</caption>
+					<category>Rule</category>
+					<description/>
+				</property>
+			</properties>
+		</property>
+	<!-- Rows END -->
+	
+    </properties>
+</widget>
