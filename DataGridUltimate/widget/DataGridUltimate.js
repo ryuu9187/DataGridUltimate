@@ -1500,6 +1500,7 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 					dojo.connect(col, "click", dojo.hitch(this, this._sortColumn));
 					sortContainer = dojo.create("div");
 					dojo.addClass(sortContainer, "mx-datagrid-sort-icon");
+					this._lastSortedColumns.push(columns[i]);
 					dojo.place(sortContainer, col);
 					sortIcon = dojo.create("span"); 
 					dojo.addClass(sortIcon, "mx-datagrid-sort-text");
