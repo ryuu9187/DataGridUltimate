@@ -17,7 +17,7 @@
 	 
 	 QC/QA
 	 -----------------------------------------------------
-	 1- Microflow/Path data source
+	 1 - control bar buttons hide/showing w/ conditions
 	 
 	 POST-PRODUCTION
 	 --------------------------------------------------------
@@ -147,11 +147,11 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 	
 	postCreate : function(){	
 		var f;
-		
+
 		if (this.cacheColumns) {
 			this._initalizeColumnSettings();
 		}
-		
+console.log("HEY!");
 		// Add in checks here
 		if (this.selectFirst && this.selectionType == "none") {
 			console.warn("'Select first' cannot be selected if selection mode is 'No selection'.");
@@ -788,13 +788,7 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 	// Updates data for search bar
 	updateSearchBarOptions : function (callback) {
 		if (!this.currentDataSource || this.currentDataSource.dataSrc !== "xpath") {
-			this.searchIsVisible = false;
-			dojo.style(this.searchPane, "display", "none");
-			this.searchResultsPending = 0;
-			this.searchDefaultsPending = 0;
-			this.searchDataRetrieved = true;
-			this.searchDefaultsRetrieved = true;
-			dojo.style(this.searchBtn.domNode, "display", "none");
+			if (callback) { callback(); }
 			return;
 		}
 		
@@ -1007,7 +1001,7 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 	// Gets new data
 	search : function (keepSelection, pageTurn) {
 		var source = this.currentDataSource;
-		var callback, self = this;
+		var callback, self = this, context;
 		var onError = function (err) {
 			self.domNode.innerHTML = err;
 			self.dataPending = false;
@@ -1099,6 +1093,9 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 				args.path = this.entity + "/" + source.assoc.split("/")[0];
 			} else if (source.dataSrc == "mf") {
 				args.microflow = source.mf;
+				context = new mendix.lib.MxContext();
+				context.setTrackObject(this.contextObj);
+				args.context = context;
 			}
 		}
 		
@@ -1568,24 +1565,46 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 	
 	// Determines the data source
 	updateDataSource : function () {
-		var i, source;
+		var i, source = null, newSource = null, canSearch = false;
 		
 		for (i = 0; i < this.dataSources.length; i++) {
 			source = this.dataSources[i];
 			if (this.isValid(source.dataSrcVisType, source.dataSrcUserRole, 
 				this.contextObj, source.dataSrcAttr, source.dataSrcAttrValue)) {
-				
-				// Still the same
-				if (this.currentDataSource == source) {
-					return;
-				}
-				
-				this.currentDataSource = source;
-				return;
+				newSource = source;
+				break;
 			}
 		}
 		
-		this.currentDataSource = null;
+		if (newSource.dataSrc == "xpath") { canSearch = true;}
+		
+		// Update variables (continue showing search if still searchable)
+		this.searchIsVisible = this.searchIsVisible && canSearch;
+		
+		// Update visibility
+		if (!canSearch) {
+			dojo.style(this.searchPane, "display", "none"); // Hide pane
+			if (this.searchBtn) {
+				dojo.style(this.searchBtn.domNode, "display", "none"); // Hide button
+			}
+		} else {
+			if (this.searchBtnType === "always") {
+				dojo.style(this.searchPane, "display", ""); // Show pane
+			} else if (this.searchBtnType !== "never") {
+				dojo.style(this.searchBtn.domNode, "display", ""); // Show button
+			}
+		}
+		
+		// Update if default data has been retrieved
+		if (this.currentDataSource != newSource) {
+			this.searchResultsPending = 0;
+			this.searchDefaultsPending = 0;
+			this.searchDataRetrieved = !canSearch;
+			this.searchDefaultsRetrieved = !canSearch;
+		}
+		
+		// Set the new data source
+		this.currentDataSource = newSource;
 	},
 	
 	// Updates DOM for the Table
@@ -1670,7 +1689,7 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 		if (col.colDataType == "static") {
 			text = col.colDataText;
 		} else if (col.colDataType == "field" && col.colEntity == this.entity) {
-			text = obj.get(col.colAttr);
+			text = obj.has(col.colAttr) ? obj.get(col.colAttr) : "";
 		} else if (col.colDataType == "field") {
 			reference = col.colPath.substring(1, col.colPath.length-1).split("/");
 			assocDepth = reference.length/2;
@@ -1684,7 +1703,7 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 					temp = refSet[i].get(reference[counter*2]);
 					
 					// Association exists?
-					if (temp) {
+					if (temp && typeof temp === 'object' && !(temp instanceof Array)) {
 						// Reference set
 						if (!temp.objectType) {
 							for (guid in refSet[i].get(reference[counter*2])) {
@@ -2146,7 +2165,11 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 		var hasRoles = !roles || mx.session.hasSomeRole(roles),
 			hasValue = !attr || (contextObj && contextObj.get(attr) == val);
 		
-		return ruleType == 'all' ? (hasRoles && hasValue) : (hasRoles || hasValue);
+		if (!roles && !attr) { return true; }
+		
+		return ruleType == 'all' ? 
+			(hasRoles && hasValue) : 
+			((roles && hasRoles) || (attr && hasValue));
 	},
 	
 	_executeControlBarMicroflow : function (buttonConfig) {
@@ -2400,6 +2423,7 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 		return this.getHashCode(this.stringifyInOrder(obj, exclusions));
 	},
 	
+	// TODO: Cannot export over microflow
 	_export : function (config) {
 		var searchData = this._lastSearch,
 			exportAs = config.cbBtnType === "excel" ? "Excel" : "Flat",

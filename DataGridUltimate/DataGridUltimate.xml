@@ -23,7 +23,7 @@
 					<description/>
 					<enumerationValues>
 						<enumerationValue key="xpath">Database</enumerationValue>
-						<enumerationValue key="assoc">Association</enumerationValue>
+						<!--<enumerationValue key="assoc">Association</enumerationValue>-->
 						<enumerationValue key="mf">Microflow</enumerationValue>
 					</enumerationValues>
 				</property>
@@ -32,15 +32,15 @@
 					<category>Data</category>
 					<description>Database only</description>
 				</property>
-				<property key="assoc" required="false" type="entity" isPath="yes" pathType="referenceSet">
+				<!--<property key="assoc" required="false" type="entityConstraint" entityProperty="../default">
 					<caption>Association</caption>
 					<category>Data</category>
-					<description>Association only (should be a ref set from context to Entity)</description>
-				</property>
+					<description>Association only [Context/Association/TargetEntity]</description>
+				</property>-->
 				<property key="mf" type="microflow" required="false">
 					<caption>Microflow</caption>
 					<category>Data</category>
-					<description>Microflow only (Output should be list of Entity)</description>
+					<description>Microflow only</description>
 					<returnType type="Object" isList="true" entityProperty="../entity"/>
 				</property>
 				
