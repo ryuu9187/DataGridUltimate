@@ -205,9 +205,6 @@
 						<enumerationValue key="pg">Select page</enumerationValue>
 						<enumerationValue key="des">Deselect all</enumerationValue>
 						<enumerationValue key="mf">Microflow</enumerationValue>
-						<enumerationValue key="new">New</enumerationValue>
-						<enumerationValue key="edit">Edit</enumerationValue>
-						<enumerationValue key="del">Delete</enumerationValue>
 						<enumerationValue key="excel">Export to Excel</enumerationValue>
 						<enumerationValue key="ff">Export to Flat File</enumerationValue>
 					</enumerationValues>

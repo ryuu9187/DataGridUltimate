@@ -8,16 +8,11 @@
 	 9- Export options + CSV export
 	 8- Refresh rate
 	 6- Class mapping
-	 4- New/Edit/Delete buttons
 	 3- Button fields
 	 2- show enum icons
 	 5- dt formatting
 	 7- editability?
 	 10- When going over 2 associations, in between associations will pull all data when attribute list is set to empty make it arbitrarily pick first attr in list
-	 
-	 QC/QA
-	 -----------------------------------------------------
-	 1 - control bar buttons hide/showing w/ conditions
 	 
 	 POST-PRODUCTION
 	 --------------------------------------------------------
@@ -27,6 +22,7 @@
 	 - Remember paging?
 	 - Support other tokens besides currentuser and currentobject in xpath
 	 - Add error checking for search entity not matching last path object
+	 - Allow wysiwyg exporting for microflow
 	 
 	 ADDT'L IDEAS
 	 --------------------------------------------------------
@@ -1379,8 +1375,6 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 		for (i = 0; i < this.controlBarButtons.length; i++) {
 		
 			cb = this.controlBarButtons[i]; 
-			// TODO: Should we not show the control bar for microflow. I think we should
-			// Also, how should paging work?
 			
 			// Check visibility (always hide buttons in a no-selection)
 			visible = this.selectionType !== "none" && 
@@ -2417,7 +2411,6 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 		return this.getHashCode(this.stringifyInOrder(obj, exclusions));
 	},
 	
-	// TODO: Cannot export over microflow
 	_export : function (config) {
 		var searchData = this._lastSearch,
 			exportAs = config.cbBtnType === "excel" ? "Excel" : "Flat",
@@ -2429,6 +2422,12 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 		var exportAmount = (exportType === "wysiwyg") ? Math.min(this._rowData.length, max)
 			: Math.min(max, this.count);
 		var includeHiddenColumns = (exportType !== "wysiwyg");
+		
+		if (this.dataSource.dataSrc !== 'xpath') {
+			mx.ui.warning("Cannot export data.", true);
+			console.warn("Cannot export data derived from a microflow data source.");
+			return;
+		}
 		
 		searchData.amount = exportAmount;
 		if (exportType === "all") { searchData.offset = 0; }
