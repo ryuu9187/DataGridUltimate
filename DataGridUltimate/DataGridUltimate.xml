@@ -326,7 +326,7 @@
 					<description>Comma delimited string of project roles allowed to see this button</description>
 				</property>
 				
-				<property key="cbBtnVisAttr" type="attribute" required="false" entityProperty="../entity">
+				<property key="cbBtnVisAttr" type="attribute" required="false">
 					<caption>Attribute</caption>
 					<category>Visibility</category>
 					<description/>

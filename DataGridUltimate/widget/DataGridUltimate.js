@@ -42,6 +42,7 @@ dojo.require("DataGridUltimate.widget.lib.jquery-multiselect-min"); // Optional?
 dojo.require("DataGridUltimate.widget.lib.jquery-colResizable-min"); // Optional?
 // Make optional?
 dojo.require("dijit.Menu");
+dojo.require("dojo.Deferred");
 dojo.require("dijit.MenuItem");
 dojo.require("dijit.CheckedMenuItem");
 dojo.require("dijit.MenuSeparator");
@@ -151,7 +152,7 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 		if (this.cacheColumns) {
 			this._initalizeColumnSettings();
 		}
-console.log("HEY!");
+
 		// Add in checks here
 		if (this.selectFirst && this.selectionType == "none") {
 			console.warn("'Select first' cannot be selected if selection mode is 'No selection'.");
@@ -202,11 +203,18 @@ console.log("HEY!");
 	},
 	
 	updateGrid : function (guid) {
+		var chain = new dojo.Deferred();
 		this.updateDataSource(); // This should go first
 		this.searchDataRetrieved = false;
 		this.searchDefaultsRetrieved = false;
-		this.updateSearchBarOptions(dojo.hitch(this, this.search)); // When search data is populated (i.e. there are defaults), 
-		this.updateControlBar();
+		
+		// Execute updating in this order
+		chain.then(dojo.hitch(this, this.updateSearchBarOptions))
+			 .then(dojo.hitch(this, this.search))
+			 .then(dojo.hitch(this, this.updateControlBar));
+		chain.resolve();
+		//this.updateSearchBarOptions(dojo.hitch(this, this.search)); // When search data is populated (i.e. there are defaults), 
+		// this.updateControlBar();
 		this.currentPage = 0; // Reset the page if the data queried under new context
 	},
 	
@@ -1366,74 +1374,57 @@ console.log("HEY!");
 	// Updates the buttons on the control bar
 	// Buttons are stored like a linked list to preserve ordering
 	updateControlBar : function () {
-		var i, cb, event, visible, btn, previous = null;
+		var i, cb, event, visible, btn;
 
 		for (i = 0; i < this.controlBarButtons.length; i++) {
 		
 			cb = this.controlBarButtons[i]; 
-			visible = this.currentDataSource && this.currentDataSource.dataSrc !== "mf" && 
+			// TODO: Should we not show the control bar for microflow. I think we should
+			// Also, how should paging work?
+			
+			// Check visibility (always hide buttons in a no-selection)
+			visible = this.selectionType !== "none" && 
 				this.isValid(cb.cbBtnVisType, cb.cbBtnUserRoles, this.contextObj, cb.cbBtnVisAttr, cb.cbBtnVisValue);
 			
-			// Remove the button
-			if (cb.exists && !visible) {
-				if (cb.next) {cb.next.previous = cb.previous;}
-				if (cb.previous) {cb.previous.next = cb.next;}
-				dojo.destroyRecursive(cb.widget);
-				cb.exists = false;
-			// Create the button
-			} else if (!cb.exists && visible) {
+			// Create the button if it doesn't exist
+			if (!cb.exists) {
 				btn = new mxui.widget.Button({
 					caption : cb.cbBtnCaption,
 					iconUrl : cb.cbBtnImage
 				});
-				cb.exists = true;
+				
 				// Set tooltip
 				dojo.attr(btn.domNode, "title", cb.cbBtnTooltip || cb.cbBtnCaption);
-
-				event = (function (_config) {
-					return function () {
-						if (_config.cbBtnType === "all") {
-							this.selectAll(true);
-						} else if (_config.cbBtnType === "pg") {
-							this.selectAll();
-						} else if (_config.cbBtnType === "des") {
-							this.deselectAll();
-						} else if (_config.cbBtnType === "mf") {
-							this._executeControlBarMicroflow(_config);
-						} else if (_config.cbBtnType === "excel" || _config.cbBtnType === "ff") {
-							this._export(_config);
-						} else {
-							console.warn("This feature has not been implemented yet. Button Type: " + _config.cbBtnType);
-						}
-					};
-				}(cb));
 				
 				// Set the event
+				event = 
+					(function (_config) {
+						return function () {
+							if (_config.cbBtnType === "all") {
+								this.selectAll(true);
+							} else if (_config.cbBtnType === "pg") {
+								this.selectAll();
+							} else if (_config.cbBtnType === "des") {
+								this.deselectAll();
+							} else if (_config.cbBtnType === "mf") {
+								this._executeControlBarMicroflow(_config);
+							} else if (_config.cbBtnType === "excel" || _config.cbBtnType === "ff") {
+								this._export(_config);
+							} else {
+								console.warn("This feature has not been implemented yet. Button Type: " + _config.cbBtnType);
+							}
+						};
+					}(cb));
+					
 				dojo.connect(btn.domNode, "click", dojo.hitch(this, event));
-				
-				// Add to control bar
-				if (previous && previous.widget) {
-					dojo.place(btn.domNode, previous.widget.domNode, "after");
-				} else {
-					dojo.place(btn.domNode, this.controlBar);
-				}
-				
-				// Update pointers
+					
+				cb.exists = true;
 				cb.widget = btn;
-				cb.next = previous ? previous.next : null;
-				cb.previous = previous;
-				if (previous != null) {previous.next = cb;}
-				
-				// Set new previous
-				previous = cb;
-			} else if (cb.exists && visible) {
-				previous = cb;
+				dojo.place(btn.domNode, this.controlBar, "last");
 			}
 			
-			// Always hide buttons in a no-selection
-			if (this.selectionType === "none") {
-				dojo.style(btn.domNode, "display", "none");
-			}
+			// Hide / Show
+			dojo.style(cb.widget.domNode, "display", visible ? "" : "none");
 			
 			// Valid configuration
 			if (cb.cbBtnType==="mf") {
@@ -2163,7 +2154,10 @@ console.log("HEY!");
 	
 	isValid : function (ruleType, roles, contextObj, attr, val) {
 		var hasRoles = !roles || mx.session.hasSomeRole(roles),
-			hasValue = !attr || (contextObj && contextObj.get(attr) == val);
+			hasCtx = !!contextObj, 
+			isBool = hasCtx ? contextObj.isBoolean(attr) : false,
+			hasValue = !attr || (hasCtx && 
+				(isBool?val==='true':val) === contextObj.get(attr));
 		
 		if (!roles && !attr) { return true; }
 		
