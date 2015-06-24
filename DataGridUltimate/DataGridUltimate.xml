@@ -626,10 +626,16 @@
 					<category>General</category>
 					<description/>
 				</property>
-				<property key="colShowEnumIcon" required="true" type="boolean" defaultValue="false">
-					<caption>Show enum icon</caption>
+				<property key="colEnumDisplay" required="true" type="enumeration" defaultValue="caption">
+					<caption>Enum display</caption>
 					<category>General</category>
-					<description/>
+					<description>Icon only works with .png, .jpg, and .gif files.
+					No direct support exists, so best guess is made.</description>
+					<enumerationValues>
+						<enumerationValue key="value">Value</enumerationValue>
+						<enumerationValue key="caption">Caption</enumerationValue>
+						<enumerationValue key="icon">Icon</enumerationValue>
+					</enumerationValues>
 				</property>
 				
 				<property key="colDataType" required="true" type="enumeration" defaultValue="field">

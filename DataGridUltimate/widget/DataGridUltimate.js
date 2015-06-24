@@ -9,15 +9,14 @@
 	 8- Refresh rate
 	 6- Class mapping
 	 3- Button fields
-	 2- show enum icons
 	 5- dt formatting
 	 7- editability?
 	 10- When going over 2 associations, in between associations will pull all data when attribute list is set to empty make it arbitrarily pick first attr in list
+	 11 - tooltip
 	 
 	 POST-PRODUCTION
 	 --------------------------------------------------------
-	 - Add a subscribe/unsubscribe feature for listening widgets
-	 - Cleanup
+	 - Cleanup / move certain functions to separate javascript files // use deferred/lists more
 	 - Null checking / Error handling (for columns too)
 	 - Remember paging?
 	 - Support other tokens besides currentuser and currentobject in xpath
@@ -27,9 +26,11 @@
 	 ADDT'L IDEAS
 	 --------------------------------------------------------
 	 Additional Widgets
+	 - Add a subscribe/unsubscribe feature for listening widgets
 	 1b- Linked Button
 	 1a- Linked Data view
 	 2?- Data source picker (Have it read the data sources and generate a button selector/dropdown with options depending on security?)
+	 - allow forms or html snippets as templates for cell data
 **/
 
 // dojo.require("DataGridUltimate.widget.lib.jquery-min");
@@ -39,6 +40,7 @@ dojo.require("DataGridUltimate.widget.lib.jquery-colResizable-min"); // Optional
 // Make optional?
 dojo.require("dijit.Menu");
 dojo.require("dojo.Deferred");
+dojo.require("dojo.DeferredList");
 dojo.require("dijit.MenuItem");
 dojo.require("dijit.CheckedMenuItem");
 dojo.require("dijit.MenuSeparator");
@@ -67,7 +69,7 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 		pagingOptions: null,
 		
 		ctrlBarClickType: 'dblclick',
-		controlBarButtons: null, // Added 'next', 'previous', and 'widget' properties
+		controlBarButtons: null, // Added 'widget' property
 
 		searchBtnType: 'initialClosed',
 		searchWait: true,
@@ -142,6 +144,8 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 	_lastSortedColumns : null,
 	_lastColumnWidths : null,
 	
+	_enumCache : null,
+	
 	postCreate : function(){	
 		var f;
 
@@ -180,6 +184,8 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 		this.referenceList = {};
 		this.sortOrderList = [];
 		this.setDataLists();
+		// TODO: Setup enum cache w/ the guessing game, or just make it basic options on the column?
+		// this._setupEnumCache();
 		this.actRendered();
 	},
 	
@@ -199,19 +205,105 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 	},
 	
 	updateGrid : function (guid) {
-		var chain = new dojo.Deferred();
+		var d = new dojo.Deferred();
 		this.updateDataSource(); // This should go first
 		this.searchDataRetrieved = false;
 		this.searchDefaultsRetrieved = false;
 		
 		// Execute updating in this order
-		chain.then(dojo.hitch(this, this.updateSearchBarOptions))
-			 .then(dojo.hitch(this, this.search))
-			 .then(dojo.hitch(this, this.updateControlBar));
-		chain.resolve();
-		//this.updateSearchBarOptions(dojo.hitch(this, this.search)); // When search data is populated (i.e. there are defaults), 
-		// this.updateControlBar();
+		d.then(dojo.hitch(this, this.updateSearchBarOptions))
+		 .then(dojo.hitch(this, this.search))
+		 .then(dojo.hitch(this, this.updateControlBar));
+		d.resolve();
 		this.currentPage = 0; // Reset the page if the data queried under new context
+	},
+	
+	/// Columns have been initialized
+	_setupEnumCache : function () {
+		var i, c, m, self = this;
+
+		/// Calls a java action to determine the image being used for each enum
+		function updateCache (entity, attribute) {
+			mx.data.create({
+				entity : "DataGridUltimate.Argument",
+				callback : dojo.hitch(self, function (obj) {
+					var _self = self;
+					obj.set("JSON", entity + "." + attribute);
+					mx.data.action({
+						params : {
+							actionname : "DataGridUltimate.GetEnumImageData",
+							applyto : "selection",
+							guids : [obj.getGuid()]
+						},
+						callback : (function (_entity, _attr) {
+							return function(jsonArray){
+								var j, k, cache, 
+								enums = $.parseJSON(jsonArray);
+								cache = _self._enumCache[entity][attribute];
+								
+								var findImgFile = function (cacheSetting) {
+									return function () {
+										var img = cacheSetting.image;
+										var handle = function (response, status) {
+											if (status.xhr.status == 200) {
+												cacheSetting.image = status.args.url;
+												// console.log(cacheSetting);
+											}
+										};
+										dojo.xhrGet({
+											url : '..\\img\\' + img + '.png',
+											failOk : true,
+											handle : handle
+										});
+										dojo.xhrGet({
+											url : '..\\img\\' + img + '.jpg',
+											failOk : true,
+											handle : handle
+										});
+										dojo.xhrGet({
+											url : '..\\img\\' + img + '.gif',
+											failOk : true,
+											handle : handle
+										});
+										
+										/*var checks = new dojo.DeferredList([pngCheck, jpgCheck, gifCheck]);*/
+									};
+								};
+								
+								/// Set image url
+								for (j in enums) {
+									for (k in cache) {
+										if (cache[k].key === enums[j].value) {
+											cache[k].image = enums[j].image.replace(/\.Images\./gi, "$");
+											findImgFile(cache[k])();
+											break;
+										}
+									}
+								}
+							};
+						}(entity, attribute))
+					});
+				})
+			});
+		}
+		
+		this._enumCache = {};
+
+		// Set up enum lists
+		for (i = 0; i < this.columns.length; i++) {
+			c = this.columns[i];
+			if (!c.hidden && c.colDataType === 'field' && c.colEnumDisplay !== 'value') {
+				m = mx.meta.getEntity(c.colEntity);
+				if (m.isEnum(c.colAttr)) {
+					if (!this._enumCache[c.colEntity]) { this._enumCache[c.colEntity] = {}; }
+					if (!this._enumCache[c.colEntity][c.colAttr]) {
+						this._enumCache[c.colEntity][c.colAttr] = m.getEnumMap(c.colAttr);
+						updateCache(c.colEntity, c.colAttr);
+					}
+				}
+			}
+		}
+		
 	},
 	
 	_initalizeColumnSettings : function () {
@@ -1368,7 +1460,6 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 	},
 	
 	// Updates the buttons on the control bar
-	// Buttons are stored like a linked list to preserve ordering
 	updateControlBar : function () {
 		var i, cb, event, visible, btn;
 
@@ -1670,11 +1761,33 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 		var td = dojo.create("td");
 		var container = dojo.create("div");
 		var text = "Loading..."; // Replace with Loading GIF
+		var cache = this._enumCache;
+		
+		var getDisplayValue = function(v) {
+			var enumObj, displayValue = v;
+			
+			// If Enum, get caption or image
+			if (col.colEnumDisplay !== 'value' && cache[col.colEntity] && 
+				cache[col.colEntity][col.colAttr]) {
+				enumObj = $.grep(cache[col.colEntity][col.colAttr], function (e) {return e.key === v;});
+				if (enumObj.length == 1) {
+					if (col.colEnumDisplay === 'icon') {
+						displayValue = "<img src='" + enumObj[0].image + "' />";
+					} else { // caption
+						displayValue = enumObj[0].caption;
+					}
+				}
+			}
+			
+			 // DT Format
+			 
+			return displayValue;
+		};
 		
 		if (col.colDataType == "static") {
-			text = col.colDataText;
+			text = getDisplayValue(col.colDataText);
 		} else if (col.colDataType == "field" && col.colEntity == this.entity) {
-			text = obj.has(col.colAttr) ? obj.get(col.colAttr) : "";
+			text = obj.has(col.colAttr) ? getDisplayValue(obj.get(col.colAttr)) : "";
 		} else if (col.colDataType == "field") {
 			reference = col.colPath.substring(1, col.colPath.length-1).split("/");
 			assocDepth = reference.length/2;
@@ -1709,7 +1822,7 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 			text = "";
 			
 			for (i = 0; refSet && i < refSet.length; i++) {
-				text += append + refSet[i].get(col.colAttr);
+				text += append + getDisplayValue(refSet[i].get(col.colAttr));
 				append = ";";
 			}
 
@@ -1723,7 +1836,7 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 				callback : (function (_container, _config) {
 					return function (calculatedValue) {
 						if (_container) {
-							_container.innerHTML = calculatedValue;
+							_container.innerHTML = getDisplayValue(calculatedValue);
 						}
 					};
 				}(container, col)),
@@ -1733,6 +1846,7 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 			});
 		}
 		
+		// TODO: Allow for buttons
 		container.innerHTML = text;
 		
 		dojo.place(container, td);
