@@ -72,6 +72,7 @@
 						<attributeType name="Integer"/>
 						<attributeType name="Long"/>
 						<attributeType name="String"/>
+						<attributeType name="Decimal"/>
 					</attributeTypes>
 				</property>
 				<property key="dataSrcAttrValue" required="false" type="string">
@@ -89,7 +90,7 @@
 		<property key="refreshRate" required="true" type="integer" defaultValue="0">
 			<caption>Refresh rate (seconds)</caption>
 			<category>General</category>
-			<description/>
+			<description>Not currently supported</description>
 		</property>
 		
 		<property key="selectionType" required="true" type="enumeration" defaultValue="single">
@@ -496,6 +497,7 @@
 						<attributeType name="Integer"/>
 						<attributeType name="Long"/>
 						<attributeType name="String"/>
+						<attributeType name="Decimal"/>
 					</attributeTypes>
 				</property>
 				
@@ -519,6 +521,7 @@
 						<attributeType name="Integer"/>
 						<attributeType name="Long"/>
 						<attributeType name="String"/>
+						<attributeType name="Decimal"/>
 					</attributeTypes>
 				</property>
 				
@@ -608,7 +611,7 @@
 					<description/>
 					<enumerationValues>
 						<enumerationValue key="data">Data only</enumerationValue>
-						<enumerationValue key="button">Button (uses data as caption)</enumerationValue>
+						<enumerationValue key="button">Button (uses data as caption) (not currently supported)</enumerationValue>
 					</enumerationValues>
 				</property>
 				<property key="colWidth" required="true" type="string" defaultValue="auto">
@@ -619,22 +622,21 @@
 				<property key="colEditable" required="true" type="boolean" defaultValue="false">
 					<caption>Editable</caption>
 					<category>General</category>
-					<description/>
+					<description>Not currently supported</description>
 				</property>
 				<property key="colTooltipForm" required="false" type="form">
 					<caption>Tooltip</caption>
 					<category>General</category>
-					<description/>
+					<description>Not currently supported</description>
 				</property>
 				<property key="colEnumDisplay" required="true" type="enumeration" defaultValue="caption">
 					<caption>Enum display</caption>
 					<category>General</category>
-					<description>Icon only works with .png, .jpg, and .gif files.
-					No direct support exists, so best guess is made.</description>
+					<description/>
 					<enumerationValues>
 						<enumerationValue key="value">Value</enumerationValue>
 						<enumerationValue key="caption">Caption</enumerationValue>
-						<enumerationValue key="icon">Icon</enumerationValue>
+						<enumerationValue key="icon">Icon (not supported)</enumerationValue>
 					</enumerationValues>
 				</property>
 				
@@ -679,6 +681,7 @@
 						<attributeType name="Integer"/>
 						<attributeType name="Long"/>
 						<attributeType name="String"/>
+						<attributeType name="Decimal"/>
 					</attributeTypes>
 				</property>
 				
@@ -800,6 +803,7 @@
 						<attributeType name="Integer"/>
 						<attributeType name="Long"/>
 						<attributeType name="String"/>
+						<attributeType name="Decimal"/>
 					</attributeTypes>
 				</property>
 				<property key="sortDirection" required="true" type="enumeration" defaultValue="asc">
@@ -820,7 +824,7 @@
 		<property key="classMappingRules" required="false" type="object" isList="true">
 			<caption>Class mapping rules</caption>
 			<category>Rows</category>
-			<description>Attaches CSS classes to rows based on criteria</description>
+			<description>Attaches CSS classes to rows based on criteria. (Not currently supported)</description>
 			<properties>
 				<property key="rowAttr" type="attribute" required="true" entityProperty="../entity">
 					<caption>Attribute</caption>
@@ -836,6 +840,7 @@
 						<attributeType name="Integer"/>
 						<attributeType name="Long"/>
 						<attributeType name="String"/>
+						<attributeType name="Decimal"/>
 					</attributeTypes>
 				</property>
 				<property key="rowValue" required="false" type="string">

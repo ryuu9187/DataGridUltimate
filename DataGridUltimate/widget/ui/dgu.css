@@ -50,7 +50,7 @@
 	border-top: 3px solid white;
 }
 
-.dgu-table th, td {
+.dgu-table th, .dgu-table td {
 	overflow: hidden;
 }
 
@@ -212,7 +212,7 @@
 }
 
 .ui-multiselect-checkboxes input[type="checkbox"] {
-	margin-right: 5px !important;
+	margin: 5px !important;
 }
 
 .ui-multiselect-menu .ui-widget-header {
@@ -230,7 +230,7 @@
 }
 
 .dgu-control-bar button{
-	margin-left: 5px;
+	margin-right: 5px;
 	margin-bottom: 5px;
 }
 
@@ -318,7 +318,7 @@
 .dgu-h-ctxMenu {
 	border	:	1px solid rgb(200,200,200) !important;
 	background : linear-gradient(rgb(50,50,50),rgb(55,55,55));
-	color: white;
+	color: white !important;
 	font-size: 13px;
 }
 

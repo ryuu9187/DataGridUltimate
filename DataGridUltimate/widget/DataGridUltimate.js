@@ -1,3 +1,5 @@
+// dojo.provide("DataGridUltimate.widget.DataGridUltimate");
+
 /** 
 	Author: Jason Braswell
 	Date created: 12/22/2014
@@ -185,8 +187,8 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 		this.sortOrderList = [];
 		this.setDataLists();
 		// TODO: Setup enum cache w/ the guessing game, or just make it basic options on the column?
-		// this._setupEnumCache();
-		this.actRendered();
+		this._setupEnumCache();
+		this.actLoaded();
 	},
 	
 	update : function(contextObj, callback) {
@@ -199,6 +201,8 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 				this._handle = this.subscribe({ guid : contextObj.getGUID(), callback : dojo.hitch(this, this.updateGrid)});
 				this.updateGrid();
 			}
+		} else {
+			console.warn("No data context received for DGU.");
 		}
 		
 		if(callback){callback();}
@@ -298,7 +302,8 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 					if (!this._enumCache[c.colEntity]) { this._enumCache[c.colEntity] = {}; }
 					if (!this._enumCache[c.colEntity][c.colAttr]) {
 						this._enumCache[c.colEntity][c.colAttr] = m.getEnumMap(c.colAttr);
-						updateCache(c.colEntity, c.colAttr);
+						// TODO: Set enum image
+						// updateCache(c.colEntity, c.colAttr);
 					}
 				}
 			}
@@ -1764,22 +1769,39 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 		var cache = this._enumCache;
 		
 		var getDisplayValue = function(v) {
-			var enumObj, displayValue = v;
+			var enumObj, d, meta, displayValue = v;
 			
-			// If Enum, get caption or image
-			if (col.colEnumDisplay !== 'value' && cache[col.colEntity] && 
-				cache[col.colEntity][col.colAttr]) {
-				enumObj = $.grep(cache[col.colEntity][col.colAttr], function (e) {return e.key === v;});
-				if (enumObj.length == 1) {
-					if (col.colEnumDisplay === 'icon') {
-						displayValue = "<img src='" + enumObj[0].image + "' />";
-					} else { // caption
-						displayValue = enumObj[0].caption;
+			if (v == null) { return ""; }
+			
+			// Not a calculated field
+			if (col.colAttr && col.colEntity) {
+				// Get meta data
+				meta = mx.meta.getEntity(col.colEntity);
+				
+				// If Enum
+				if (meta.isEnum(col.colAttr)) {
+					// Get caption or image
+					if (col.colEnumDisplay !== 'value' && cache[col.colEntity] && cache[col.colEntity][col.colAttr]) {
+						enumObj = $.grep(cache[col.colEntity][col.colAttr], function (e) {return e.key === v;});
+						if (enumObj.length == 1) {
+							if (col.colEnumDisplay === 'icon') {
+								// displayValue = "<img src='" + enumObj[0].image + "' />";
+							} else if (col.colEnumDisplay === 'caption') { // caption
+								displayValue = enumObj[0].caption;
+							}
+						}
 					}
 				}
-			}
-			
-			 // DT Format
+				// DT Format
+				else if (meta.isDate(col.colAttr)) {
+					d = new Date(v);
+					displayValue = (d.getMonth()+1) + "/" + d.getDate() + "/" + d.getFullYear();
+				 }
+				 // Boolean Format
+				 else if (meta.isBoolean(col.colAttr)) {
+					displayValue = v ? 'Yes' : 'No';
+				 }
+			 }
 			 
 			return displayValue;
 		};
@@ -2537,7 +2559,7 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 			: Math.min(max, this.count);
 		var includeHiddenColumns = (exportType !== "wysiwyg");
 		
-		if (this.dataSource.dataSrc !== 'xpath') {
+		if (this.currentDataSource.dataSrc !== 'xpath') {
 			mx.ui.warning("Cannot export data.", true);
 			console.warn("Cannot export data derived from a microflow data source.");
 			return;
