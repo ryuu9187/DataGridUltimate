@@ -611,7 +611,7 @@
 					<description/>
 					<enumerationValues>
 						<enumerationValue key="data">Data only</enumerationValue>
-						<enumerationValue key="button">Button (uses data as caption) (not currently supported)</enumerationValue>
+						<enumerationValue key="button">Button (uses data as caption)</enumerationValue>
 					</enumerationValues>
 				</property>
 				<property key="colWidth" required="true" type="string" defaultValue="auto">

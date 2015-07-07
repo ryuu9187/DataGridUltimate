@@ -1,4 +1,4 @@
-// dojo.provide("DataGridUltimate.widget.DataGridUltimate");
+"use strict";
 
 /** 
 	Author: Jason Braswell
@@ -10,7 +10,6 @@
 	 9- Export options + CSV export
 	 8- Refresh rate
 	 6- Class mapping
-	 3- Button fields
 	 5- dt formatting
 	 7- editability?
 	 10- When going over 2 associations, in between associations will pull all data when attribute list is set to empty make it arbitrarily pick first attr in list
@@ -34,25 +33,25 @@
 	 2?- Data source picker (Have it read the data sources and generate a button selector/dropdown with options depending on security?)
 	 - allow forms or html snippets as templates for cell data
 **/
-
-// dojo.require("DataGridUltimate.widget.lib.jquery-min");
-dojo.require("DataGridUltimate.widget.lib.jquery-ui-min");
-dojo.require("DataGridUltimate.widget.lib.jquery-multiselect-min"); // Optional?
-dojo.require("DataGridUltimate.widget.lib.jquery-colResizable-min"); // Optional?
-// Make optional?
-dojo.require("dijit.Menu");
-dojo.require("dojo.Deferred");
-dojo.require("dojo.DeferredList");
-dojo.require("dijit.MenuItem");
-dojo.require("dijit.CheckedMenuItem");
-dojo.require("dijit.MenuSeparator");
-dojo.require("dijit.PopupMenuItem");
-
 mendix.dom.insertCss(mx.moduleUrl("DataGridUltimate.widget", "ui/dgu.css"));
 mendix.dom.insertCss(mx.moduleUrl("DataGridUltimate.widget", "ui/dgu-jquery-ui.css"));
 mendix.dom.insertCss(mx.moduleUrl("DataGridUltimate.widget", "ui/dgu-jquery-multiselect.css"));
 
-mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
+define([
+	'dojo/_base/declare', 'mxui/widget/_WidgetBase', 
+	"dijit/Menu", "dojo/Deferred", "dojo/DeferredList", "dijit/MenuItem", "dijit/CheckedMenuItem", "dijit/MenuSeparator", "dijit/PopupMenuItem",
+	"DataGridUltimate/widget/lib/jquery-min"
+], function (declare, _WidgetBase, Menu, Deferred, DeferredList, MenuItem, CheckedMenuItem, MenuSeparator, PopupMenuItem, _jQuery) {
+	
+"use strict";
+// Define jquery as the version we want here
+var jQuery = _jQuery.noConflict(true);
+
+dojo.require("DataGridUltimate.widget.lib.jquery-ui-min");
+dojo.require("DataGridUltimate.widget.lib.jquery-multiselect-min");
+dojo.require("DataGridUltimate.widget.lib.jquery-colResizable-min");
+
+return declare("DataGridUltimate.widget.DataGridUltimate", [_WidgetBase], {
 	mixins : [mxui.mixin._Contextable],
 	inputargs  : {
 		entity: '',
@@ -148,6 +147,7 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 	
 	_enumCache : null,
 	
+	constructor: function () {},
 	postCreate : function(){	
 		var f;
 
@@ -1764,10 +1764,10 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 	createData : function (obj, col) {
 		var append = "", i, reference, refSet = [obj], temp, guid, tempArray, assocDepth = 0, counter=0;
 		var td = dojo.create("td");
-		var container = dojo.create("div");
 		var text = "Loading..."; // Replace with Loading GIF
 		var cache = this._enumCache;
 		
+		// Gets the display of any particular value in regards to its data type
 		var getDisplayValue = function(v) {
 			var enumObj, d, meta, displayValue = v;
 			
@@ -1804,6 +1804,13 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 			 }
 			 
 			return displayValue;
+		};
+		
+		// Generates the Final Cell content, given the textual value
+		var setCellData = function (_columnConfig, _td, _value) {
+			var container = dojo.create("div");
+			container.innerHTML = _value;
+			dojo.place(container, td);
 		};
 		
 		if (col.colDataType == "static") {
@@ -1855,23 +1862,19 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 					applyto : "selection",
 					guids : [obj.getGuid()]
 				},
-				callback : (function (_container, _config) {
-					return function (calculatedValue) {
-						if (_container) {
-							_container.innerHTML = getDisplayValue(calculatedValue);
-						}
+				callback : (function (_config, _td) {
+					return function (calculatedValue) { 
+						setCellData(_config, _td, getDisplayValue(calculatedValue));	
 					};
-				}(container, col)),
+				}(col, td)),
 				error : function (err) {
 					console.error(err);
 				}
 			});
 		}
 		
-		// TODO: Allow for buttons
-		container.innerHTML = text;
+		setCellData(col, td, text); 
 		
-		dojo.place(container, td);
 		return td;
 	},
 	
@@ -2622,6 +2625,6 @@ mxui.widget.declare("DataGridUltimate.widget.DataGridUltimate", {
 			this._setExportMetaReferences(references[ref].references);
 		}
 	}
-	
-	
+});
+
 });
