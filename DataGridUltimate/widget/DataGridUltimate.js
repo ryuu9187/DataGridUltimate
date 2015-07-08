@@ -1417,15 +1417,15 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 		},
 		
 		_setSearchFilterDefault : function (field) {
-			var o, options;
+			var i, options;
 			
 			if (field.searchFieldType != 'dropdown') {
 				field.domNode.value = field.searchDefault;
 			} else {
 				options = field.domNode.options;
 					
-				for (o in options) {
-					options[o].selected = options[o].defaultSelected;
+				for (i=0; i <options.length; i++) {
+					options[i].selected = options[i].defaultSelected;
 				}
 			}
 		},
@@ -2404,7 +2404,7 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 					mx.data.action({
 						params : params, 
 						async : config.cbBtnMfCallType === "async",
-						callback : dojo.hitch(this, callback),
+						callback : callback,
 						error : function (err) {
 							console.error(err);
 						}
@@ -2420,7 +2420,7 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 					handler: dojo.hitch(this, executeMicroflow)
 				});
 			} else {
-				executeMicroflow();
+				dojo.hitch(this, executeMicroflow)();
 			}
 		},
 		
