@@ -1880,7 +1880,8 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 					content = dojo.create("div");
 					content.innerHTML = _value;
 				}
-
+				
+				dojo.empty(td);
 				dojo.place(content, td);
 			};
 			
