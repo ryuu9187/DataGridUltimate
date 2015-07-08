@@ -1314,10 +1314,11 @@ return declare("DataGridUltimate.widget.DataGridUltimate", [_WidgetBase], {
 				}	
 				// Dropdowns (including multi-select)
 				else if (f.searchFieldType === 'dropdown') {
-					options = f.domNode.selectedOptions;
+					// IE fix
+					options = $(f.domNode).find(":selected");
 					
 					// Option check
-					if (options.length > 0 && options[0].value !== 'Please select') {
+					if (options.length > 0 && options.get(0).val() !== 'Please select') {
 						
 						// Generate xpath
 						concat = '';
@@ -1334,7 +1335,7 @@ return declare("DataGridUltimate.widget.DataGridUltimate", [_WidgetBase], {
 						searchXPath += "[";
 												
 						for (j = 0; j < options.length; j++) {
-							searchXPath += concat + f.searchAttr + " = " + getValue(f, options[j].value);
+							searchXPath += concat + f.searchAttr + " = " + getValue(f, options.get(j).val());
 							concat = " or ";
 						}
 						if (isRef) { searchXPath += "]"; }
