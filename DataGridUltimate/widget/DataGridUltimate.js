@@ -1323,7 +1323,7 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 						options = $(f.domNode).find(":selected");
 						
 						// Option check
-						if (options.length > 0 && options.get(0).val() !== 'Please select') {
+						if (options.length > 0 && options.get(0).value !== 'Please select') {
 							
 							// Generate xpath
 							concat = '';
@@ -1340,7 +1340,7 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 							searchXPath += "[";
 													
 							for (j = 0; j < options.length; j++) {
-								searchXPath += concat + f.searchAttr + " = " + getValue(f, options.get(j).val());
+								searchXPath += concat + f.searchAttr + " = " + getValue(f, options.get(j).value);
 								concat = " or ";
 							}
 							if (isRef) { searchXPath += "]"; }
