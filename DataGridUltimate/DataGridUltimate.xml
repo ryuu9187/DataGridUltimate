@@ -698,11 +698,6 @@
 					<description/>
 					<returnType type="Void"/>
 				</property>
-				<property key="colBtnMaintain" required="true" type="boolean" defaultValue="false">
-					<caption>Maintain selection after microflow</caption>
-					<category>Button - Event</category>
-					<description/>
-				</property>	
 				<property key="colBtnAsk" required="true" type="boolean" defaultValue="false">
 					<caption>Ask confirmation</caption>
 					<category>Button - Event</category>

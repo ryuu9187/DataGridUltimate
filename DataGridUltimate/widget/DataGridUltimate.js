@@ -1,5 +1,3 @@
-"use strict";
-
 /** 
 	Author: Jason Braswell
 	Date created: 12/22/2014
@@ -43,7 +41,6 @@ define([
 	"DataGridUltimate/widget/lib/jquery-min"
 ], function (declare, _WidgetBase, Menu, Deferred, DeferredList, MenuItem, CheckedMenuItem, MenuSeparator, PopupMenuItem, _jQuery) {
 	
-"use strict";
 // Define jquery as the version we want here
 var jQuery = _jQuery.noConflict(true);
 
@@ -147,7 +144,21 @@ return declare("DataGridUltimate.widget.DataGridUltimate", [_WidgetBase], {
 	
 	_enumCache : null,
 	
-	constructor: function () {},
+	constructor: function () {
+		this._lastColumnWidths = [];	
+		this._selectedGuids = [];
+		this._guids = [];
+		this._rowData = [];
+		this._lastSearch = {};
+		this._lastSortedColumns = [];
+		this._paging = {};
+		
+		this.attributeList = [];
+		this.attributeMetaData = [];
+		this.referenceList = {};
+		this.sortOrderList = [];
+	},
+	
 	postCreate : function(){	
 		var f;
 
@@ -161,13 +172,6 @@ return declare("DataGridUltimate.widget.DataGridUltimate", [_WidgetBase], {
 			return;
 		}
 
-		this._lastColumnWidths = [];	
-		this._selectedGuids = [];
-		this._guids = [];
-		this._rowData = [];
-		this._lastSearch = {};
-		this._lastSortedColumns = [];
-		this._paging = {};
 		this.pageSize = this.defaultRows;
 		dojo.place(this.createGrid(), this.domNode);
 		this._makeColumnsSortable();
@@ -181,10 +185,6 @@ return declare("DataGridUltimate.widget.DataGridUltimate", [_WidgetBase], {
 			}
 		}
 		
-		this.attributeList = [];
-		this.attributeMetaData = [];
-		this.referenceList = {};
-		this.sortOrderList = [];
 		this.setDataLists();
 		// TODO: Setup enum cache w/ the guessing game, or just make it basic options on the column?
 		this._setupEnumCache();
@@ -1766,6 +1766,53 @@ return declare("DataGridUltimate.widget.DataGridUltimate", [_WidgetBase], {
 		var td = dojo.create("td");
 		var text = "Loading..."; // Replace with Loading GIF
 		var cache = this._enumCache;
+		var objGUID = obj.getGUID();
+		
+		// OnClick function
+		var executeMicroflow = function (_guid, _colConfig) {
+			return function () {
+				var runMicroflow = function () {
+					var underlay, progress, callback;
+				
+					if (_colConfig.colBtnProgBarType == "block") {
+						underlay = true;
+						mx.ui.showUnderlay();
+					}
+				
+					if (_colConfig.colBtnProgBarType != "none") {
+						progress = mx.ui.showProgress(_colConfig.colBtnProgMsg);
+					}
+				
+					callback = function () {
+						if (progress) {mx.ui.hideProgress(progress);}
+						if (underlay) {mx.ui.hideUnderlay();}
+					};
+					
+					mx.data.action({
+						params : {
+							actionname: _colConfig.colBtnMf,
+							applyto: "selection",
+							guids : [_guid]
+						}, 
+						async : _colConfig.colBtnMfCallType === "async",
+						callback : dojo.hitch(this, callback),
+						error : function (err) {
+							console.error(err);
+						}
+					}, this);
+				};
+				
+				if (_colConfig.colBtnAsk) {
+					mx.ui.confirmation({
+						content: _colConfig.colBtnQuestion,
+						proceed: _colConfig.colBtnProceed,
+						cancel: _colConfig.colBtnCancel,
+						handler: dojo.hitch(this, runMicroflow)
+					});
+				} else { runMicroflow(); }
+			
+			};
+		};
 		
 		// Gets the display of any particular value in regards to its data type
 		var getDisplayValue = function(v) {
@@ -1808,9 +1855,27 @@ return declare("DataGridUltimate.widget.DataGridUltimate", [_WidgetBase], {
 		
 		// Generates the Final Cell content, given the textual value
 		var setCellData = function (_columnConfig, _td, _value) {
-			var container = dojo.create("div");
-			container.innerHTML = _value;
-			dojo.place(container, td);
+			var btn, content = null;
+			
+			if (_columnConfig.colType === 'button') {
+				btn = new mxui.widget.Button({
+					caption: _value,
+					renderType: _columnConfig.colBtnRenderType,
+					iconUrl: _columnConfig.colBtnImg,
+					title: _columnConfig.colBtnTooltip,
+					onClick: executeMicroflow(objGUID, _columnConfig)
+				});
+				
+				dojo.addClass(btn.domNode, "btn-" + _columnConfig.colBtnStyle.toLowerCase());
+				
+				content = btn.domNode;
+				
+			} else {
+				content = dojo.create("div");
+				content.innerHTML = _value;
+			}
+
+			dojo.place(content, td);
 		};
 		
 		if (col.colDataType == "static") {
