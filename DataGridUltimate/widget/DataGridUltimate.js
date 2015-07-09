@@ -208,6 +208,7 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 				}
 			} else {
 				console.warn("No data context received for DGU.");
+				this.updateGrid();
 			}
 			
 			if(callback){callback();}
@@ -2424,6 +2425,10 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 			}
 		},
 		
+		getSelectedParameters : function () {
+			return this._getSelectionParams("selection");
+		},
+		
 		_getSelectionParams : function (selectionType) {
 			var i, xpath, params = {}, constraints = "", len = this._selectedGuids.length;
 			var lastArgs = this._lastSearch;
@@ -2441,7 +2446,7 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 			}
 			
 			params.applyto = "set";
-			params.sort = lastArgs.sort || lastArgs.filter.sort;
+			params.sort = lastArgs.sort || (lastArgs.filter ? lastArgs.filter.sort : null);
 			xpath = "//" + this.entity;
 			
 			// XPath
