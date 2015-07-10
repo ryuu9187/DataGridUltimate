@@ -1395,7 +1395,8 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 				f = this.searchFields[i];
 				
 				// Hidden / Readonly values don't need to be reset b/c they can't be changed
-				if (f.searchType === 'normal') {
+				// Bug fix: Can't reset search fields we didn't render either
+				if (f.searchType === 'normal' && !f.invalid) {
 				
 					// Update default value(s)
 					this._setSearchFilterDefault(f);
@@ -1937,7 +1938,7 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 					},
 					callback : (function (_config, _td) {
 						return function (calculatedValue) { 
-							setCellData(_config, _td, getDisplayValue(calculatedValue));	
+							setCellData(_config, _td, calculatedValue);	
 						};
 					}(col, td)),
 					error : function (err) {
