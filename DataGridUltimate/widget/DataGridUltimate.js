@@ -2425,8 +2425,8 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 			}
 		},
 		
-		getSelectedParameters : function () {
-			return this._getSelectionParams("selection");
+		getSelectedParameters : function (selectionOverride) {
+			return this._getSelectionParams(selectionOverride || "selection");
 		},
 		
 		_getSelectionParams : function (selectionType) {
