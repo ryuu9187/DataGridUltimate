@@ -320,7 +320,7 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 		_initalizeColumnSettings : function () {
 			var i, temp = [], min = 1, max = -1, reinit = false, reinitialize = true,
 				settings, settingsList, 
-				oldSettingsHash, visibleFlags, position;
+				oldSettingsHash, visibleFlags, position, positionValue;
 				
 			if (Storage === 'undefined') {
 				console.warn('Browser does not support local storage. Cached preferences not saved.');
@@ -356,8 +356,9 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 					}
 					
 					temp[position[i]] = true;
-					if (position[i] > max) { max = position[i]; }
-					if (position[i] < min) { min = position[i]; }
+					positionValue = isNaN(position[i]) ? -1 : parseInt(position[i], 10);
+					if (positionValue > max) { max = positionValue; }
+					if (positionValue < min) { min = positionValue; }
 				}
 				
 				// Sanity check (length and range)
@@ -370,7 +371,7 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 
 			if (reinitialize) {
 				for (i = 0; i < this.columns.length; i++) {
-					this.columns[i].hidden = false;
+					this.columns[i].hidden = (this.columns[i].colHideable === 'initiallyHidden');
 					this.columns[i].position = i;
 				}
 				this._updateColumnSettings();
@@ -584,7 +585,7 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 					child = new dijit.CheckedMenuItem({
 						label : orderedColumns[i].colName,
 						checked : !orderedColumns[i].hidden,
-						disabled : !orderedColumns[i].colHideable // Disable per config
+						disabled : (orderedColumns[i].colHideable === 'never') // Disable per config
 					});
 					
 					orderedColumns[i].checkMenu = child;
@@ -592,7 +593,7 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 					dojo.addClass(child.domNode.children[1], 'dgu-h-ctxMenuItemLabel');
 					
 					// Need to manually attach click event to prevent future propagation (hiding the menu)
-					if (orderedColumns[i].colHideable) {
+					if (orderedColumns[i].colHideable !== 'never') {
 						dojo.connect(child.domNode, 'click', dojo.hitch(this, 
 							(function (c) {
 								return function (e) {
@@ -629,7 +630,7 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 				
 				// Update 'Hide Column' visibility option
 				this.getChildren()[2].set('disabled', 
-					self._lastColClicked && !self._lastColClicked.colHideable);
+					self._lastColClicked && self._lastColClicked.colHideable === 'never');
 				
 			});
 			menu.startup();
@@ -1618,7 +1619,7 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 					if (columns[i].colMove) {dojo.addClass(col, "dgu-moveable");}
 					if (columns[i].colFrozen) {dojo.addClass(col, "dgu-frozen");}
 					if (columns[i].colSort) {dojo.addClass(col, "dgu-sortable");}
-					if (columns[i].colHideable) {dojo.addClass(col, "dgu-hideable");}
+					if (columns[i].colHideable !== 'never') {dojo.addClass(col, "dgu-hideable");}
 					if (columns[i].hidden) {dojo.style(col, 'display', 'none');}
 					
 					dojo.place(col, headerRow);

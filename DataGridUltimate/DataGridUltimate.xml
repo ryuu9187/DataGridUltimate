@@ -144,7 +144,7 @@
 				<enumerationValue key="no">No</enumerationValue>
 			</enumerationValues>
 		</property>
-		
+
 		<property key="bottomPaging" required="true" type="enumeration" defaultValue="yes">
 			<caption>Bottom paging</caption>
 			<category>Paging</category>
@@ -584,7 +584,7 @@
 					<category>General</category>
 					<description>Comma delimited string of project roles allowed to see this button</description>
 				</property>
-				<property key="colMove" required="true" type="boolean" defaultValue="false">
+				<property key="colMove" required="true" type="boolean" defaultValue="true">
 					<caption>Moveable</caption>
 					<category>Header</category>
 					<description>Column can be rearranged in data grid</description>
@@ -599,10 +599,16 @@
 					<category>Header</category>
 					<description>Column can be sorted in data grid</description>
 				</property>
-				<property key="colHideable" required="true" type="boolean" defaultValue="false">
-					<caption>Hide-able</caption>
+				
+				<property key="colHideable" required="true" type="enumeration" defaultValue="initiallyVisible">
+					<caption>Hidden</caption>
 					<category>Header</category>
 					<description>Column can be toggled hidden/shown in data grid</description>
+					<enumerationValues>
+						<enumerationValue key="never">Always visible</enumerationValue>
+						<enumerationValue key="initiallyHidden">Initially hidden</enumerationValue>
+						<enumerationValue key="initiallyVisible">Initially visible</enumerationValue>
+					</enumerationValues>
 				</property>
 				
 				<property key="colType" required="true" type="enumeration" defaultValue="data">
