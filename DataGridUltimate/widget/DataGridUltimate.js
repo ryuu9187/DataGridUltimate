@@ -1,7 +1,8 @@
 /** 
 	Author: Jason Braswell
 	Date created: 12/22/2014
-	
+	Last modified: 7/22/2015
+	Last modified by: Jason Braswell
 	
 	TO DO
 	---------------------------------------------------
@@ -12,6 +13,7 @@
 	 7- editability?
 	 10- When going over 2 associations, in between associations will pull all data when attribute list is set to empty make it arbitrarily pick first attr in list
 	 11 - tooltip
+	 12 - attr-based column visibility
 	 
 	 POST-PRODUCTION
 	 --------------------------------------------------------
@@ -24,9 +26,7 @@
 	 
 	 ADDT'L IDEAS
 	 --------------------------------------------------------
-	 Additional Widgets
-	 - Add a subscribe/unsubscribe feature for listening widgets
-	 1b- Linked Button
+	 1b- Linked Button (Done)
 	 1a- Linked Data view
 	 2?- Data source picker (Have it read the data sources and generate a button selector/dropdown with options depending on security?)
 	 - allow forms or html snippets as templates for cell data
@@ -148,6 +148,7 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 		_lastColumnWidths : null,
 		
 		_enumCache : null,
+		_searchCached : true,
 		
 		constructor: function () {
 			this._lastColumnWidths = [];	
@@ -219,6 +220,7 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 			this.updateDataSource(); // This should go first
 			this.searchDataRetrieved = false;
 			this.searchDefaultsRetrieved = false;
+			this._searchCached = false; // Since context updated, search regardless of if the xpath is the same
 			
 			// Execute updating in this order
 			d.then(dojo.hitch(this, this.updateSearchBarOptions))
@@ -1207,10 +1209,11 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 				}
 			}
 			
-			if (pageTurn || !this._compareObjects(args, this._lastSearch)) {
+			if (pageTurn || !this._searchCached || !this._compareObjects(args, this._lastSearch)) {
 				this._lastSearch = args;
 				this.dataPending = true;
 				this.updateLoadingScreen();
+				this._searchCached = true;
 				
 				if (source.dataSrc === "xpath") {
 					// Create an arguments entity
@@ -1232,6 +1235,7 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 					mx.data.get(args, this);
 				}
 			}
+			// Don't search but reset selection
 		},
 
 		_compareObjects : function (a, b) {
@@ -1496,9 +1500,9 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 					dojo.attr(btn.domNode, "title", cb.cbBtnTooltip || cb.cbBtnCaption);
 					
 					// Set the event
-					event = 
+					event = dojo.hitch(this, 
 						(function (_config) {
-							return dojo.hitch(this, function () {
+							return function () {
 								if (_config.cbBtnType === "all") {
 									this.selectAll(true);
 								} else if (_config.cbBtnType === "pg") {
@@ -1512,10 +1516,10 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 								} else {
 									console.warn("This feature has not been implemented yet. Button Type: " + _config.cbBtnType);
 								}
-							});
-						}(cb));
+							};
+						}(cb)));
 						
-					dojo.connect(btn.domNode, "click", dojo.hitch(this, event));
+					dojo.connect(btn.domNode, "click", event);
 						
 					cb.exists = true;
 					cb.widget = btn;
