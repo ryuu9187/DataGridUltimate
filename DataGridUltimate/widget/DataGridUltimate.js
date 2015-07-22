@@ -1498,7 +1498,7 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 					// Set the event
 					event = 
 						(function (_config) {
-							return function () {
+							return dojo.hitch(this, function () {
 								if (_config.cbBtnType === "all") {
 									this.selectAll(true);
 								} else if (_config.cbBtnType === "pg") {
@@ -1512,7 +1512,7 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 								} else {
 									console.warn("This feature has not been implemented yet. Button Type: " + _config.cbBtnType);
 								}
-							};
+							});
 						}(cb));
 						
 					dojo.connect(btn.domNode, "click", dojo.hitch(this, event));
@@ -2407,7 +2407,7 @@ require(["DataGridUltimate/widget/lib/jquery-multiselect-min", "DataGridUltimate
 					mx.data.action({
 						params : params, 
 						async : config.cbBtnMfCallType === "async",
-						callback : callback,
+						callback : dojo.hitch(this, callback),
 						error : function (err) {
 							console.error(err);
 						}
